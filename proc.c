@@ -109,27 +109,36 @@ userinit(void)
 int
 growproc(int n)
 {
-  uint sz;
-  
-  sz = proc->sz;
-  if(n > 0){
-    if((sz = allocuvm(proc->pgdir, sz, sz + n)) == 0)
-    {
-      cprintf("Allocating pages failed!\n"); // CS3320: project 2
-      return -1;
-    }
-  } else if(n < 0){
-    if((sz = deallocuvm(proc->pgdir, sz, sz + n)) == 0)
-    {
-      cprintf("Deallocating pages failed!\n"); // CS3320: project 2
-      return -1;
-    }
-  }
-  proc->sz = sz;
-  switchuvm(proc);
-  return 0;
-}
+    uint sz = proc->sz;
 
+    if(n > 0){
+        // Check if new size exceeds max user space
+        if(sz + n > KERNBASE){
+            cprintf("Allocating pages failed!\n");
+            return -1;
+        }
+
+        if(page_allocator_type == 0){
+            // DEFAULT allocator: allocate immediately
+            if((sz = allocuvm(proc->pgdir, sz, sz + n)) == 0){
+                cprintf("Allocating pages failed!\n");
+                return -1;
+            }
+        } else {
+            // LAZY allocator: just increase process size, no physical allocation
+            sz += n;
+        }
+    } else if(n < 0){
+        if((sz = deallocuvm(proc->pgdir, sz, sz + n)) == 0){
+            cprintf("Deallocating pages failed!\n");
+            return -1;
+        }
+    }
+
+    proc->sz = sz;
+    switchuvm(proc);
+    return 0;
+}
 // Create a new process copying p as the parent.
 // Sets up stack to return as if from system call.
 // Caller must set state of returned proc to RUNNABLE.
