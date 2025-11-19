@@ -1,0 +1,7 @@
+Name: Katrina Cribbs
+UTA ID: 1002095796
+
+Status: Lazy page allocator implemented and tested. All test cases passed.
+
+Notes: 
+- To test, use: make qemu-nox and run proj2_test with argument 0 or 1.
